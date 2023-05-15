@@ -4,6 +4,7 @@
 const db = require("../db");
 const bcrypt = require("bcrypt");
 const { BCRYPT_WORK_FACTOR } = require("../config");
+const { NotFoundError } = require("../expressError");
 
 class User {
   /** Register new user. Returns
@@ -41,11 +42,7 @@ class User {
     );
     const user = result.rows[0];
 
-    if (!user) {
-      return false;
-    }
-
-    return (await bcrypt.compare(password, user.password)) === true;
+    return user && (await bcrypt.compare(password, user.password)) === true;
   }
 
   /** Update last_login_at for user */
@@ -59,9 +56,8 @@ class User {
       [username]
     );
 
-    //TODO: is this what they wanted?
     if (result.rows.length === 0) {
-      throw new Error(`user ${username} not found`);
+      throw new NotFoundError(`user ${username} not found`);
     }
   }
 
@@ -69,9 +65,10 @@ class User {
    * [{username, first_name, last_name}, ...] */
 
   static async all() {
-    let users = await db.query(
+    const users = await db.query(
       `SELECT username, first_name, last_name
       FROM users
+      ORDER BY username
       `
     );
     return users.rows;
@@ -115,8 +112,6 @@ class User {
    */
 
   static async messagesFrom(username) {
-
-    //TODO: should we throw exception if username is not found?
     const result = await db.query(
       `SELECT m.id,
         m.body,
