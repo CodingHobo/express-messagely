@@ -1,6 +1,9 @@
 "use strict";
 
 /** User of the site. */
+const db = require("../db");
+const bcrypt = require("bcrypt");
+const { BCRYPT_WORK_FACTOR } = require("../config");
 
 class User {
 
@@ -9,16 +12,51 @@ class User {
    */
 
   static async register({ username, password, first_name, last_name, phone }) {
+    const hashedPassword = await bcrypt.hash(
+      password, BCRYPT_WORK_FACTOR);
+
+    const result = await db.query(
+      `INSERT INTO users (username, password, first_name, last_name, phone, join_at)
+           VALUES
+             ($1, $2, $3, $4, $5, current_timestamp)
+           RETURNING username, password, first_name, last_name, phone`,
+      [username, hashedPassword, first_name, last_name, phone]);
+
+    return res.json(result.rows[0]);
   }
 
   /** Authenticate: is username/password valid? Returns boolean. */
 
   static async authenticate(username, password) {
+    const result = await db.query(
+      `SELECT password
+         FROM users
+         WHERE username = $1`,
+      [username]);
+    const user = result.rows[0];
+
+    if (!user) {
+      return false;
+    }
+
+    return (await bcrypt.compare(password, user.password) === true);
   }
+
 
   /** Update last_login_at for user */
 
   static async updateLoginTimestamp(username) {
+    await db.query(
+      `UPDATE users
+         SET last_login_at = current_timestamp
+         WHERE username = $1
+         RETURNING username`,
+      [username]);
+
+      //TODO: is this what they wanted?
+      if (result.rows.length === 0) {
+        throw new Error(`user ${username} not found`);
+      }
   }
 
   /** All: basic info on all users:
