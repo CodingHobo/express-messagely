@@ -48,3 +48,12 @@ CREATE TABLE messages (
   sent_at TIMESTAMP WITH TIME ZONE NOT NULL,
   read_at TIMESTAMP WITH TIME ZONE);
 
+INSERT INTO users(username, password, first_name, last_name, phone, join_at)
+VALUES
+('test_user_1', 'password', 'test1', 'mcTest', '911', '2023-05-15'),
+('test_user_2', 'password', 'test2', 'mcTesteroni', '867-5309', '2023-05-15');
+
+INSERT INTO messages(id, from_username, to_username, body, sent_at, read_at)
+VALUES
+(1, 'test_user_1', 'test_user_2', 'hey there #2', '2004-10-19 10:23:54+02', '2004-10-19 11:23:54+02'),
+(2, 'test_user_2', 'test_user_1', 'sup #1?', '2004-10-20 10:23:54+02', '2004-10-20 12:23:54+02');

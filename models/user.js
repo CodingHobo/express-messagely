@@ -14,10 +14,16 @@ class User {
     const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
 
     const result = await db.query(
-      `INSERT INTO users (username, password, first_name, last_name, phone, join_at)
-           VALUES
-             ($1, $2, $3, $4, $5, current_timestamp)
-           RETURNING username, password, first_name, last_name, phone`,
+      `INSERT INTO users (username,
+                          password,
+                          first_name,
+                          last_name,
+                          phone,
+                          join_at,
+                          last_login_at)
+       VALUES
+          ($1, $2, $3, $4, $5, current_timestamp, current_timestamp)
+       RETURNING username, password, first_name, last_name, phone`,
       [username, hashedPassword, first_name, last_name, phone]
     );
 
@@ -45,7 +51,7 @@ class User {
   /** Update last_login_at for user */
 
   static async updateLoginTimestamp(username) {
-    await db.query(
+    const result = await db.query(
       `UPDATE users
          SET last_login_at = current_timestamp
          WHERE username = $1
@@ -109,12 +115,14 @@ class User {
    */
 
   static async messagesFrom(username) {
+
+    //TODO: should we throw exception if username is not found?
     const result = await db.query(
       `SELECT m.id,
         m.body,
         m.sent_at,
         m.read_at,
-        u.username,
+        m.to_username,
         u.first_name,
         u.last_name,
         u.phone
@@ -125,10 +133,10 @@ class User {
       [username]
     );
 
-    let messages = result.rows.map((message) => ({
+    const messages = result.rows.map((message) => ({
       id: message.id,
       to_user: {
-        username: message.username,
+        username: message.to_username,
         first_name: message.first_name,
         last_name: message.last_name,
         phone: message.phone,
@@ -148,7 +156,38 @@ class User {
    *   {username, first_name, last_name, phone}
    */
 
-  static async messagesTo(username) {}
+  static async messagesTo(username) {
+    const result = await db.query(
+      `SELECT m.id,
+        m.body,
+        m.sent_at,
+        m.read_at,
+        m.from_username,
+        u.first_name,
+        u.last_name,
+        u.phone
+        FROM messages AS m
+        JOIN users AS u
+        ON m.from_username = u.username
+        WHERE m.to_username = $1`,
+      [username]
+    );
+
+    const messages = result.rows.map((message) => ({
+      id: message.id,
+      from_user: {
+        username: message.from_username,
+        first_name: message.first_name,
+        last_name: message.last_name,
+        phone: message.phone,
+      },
+      body: message.body,
+      sent_at: message.sent_at,
+      read_at: message.read_at,
+    }));
+    return messages;
+
+  }
 }
 
 module.exports = User;
