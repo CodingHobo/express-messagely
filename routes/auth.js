@@ -8,6 +8,8 @@ const router = new Router();
 const { UnauthorizedError, BadRequestError } = require("../expressError");
 const { SECRET_KEY, BCRYPT_WORK_FACTOR } = require("../config");
 
+const User = require("../models/user");
+
 /** POST /login: {username, password} => {token} */
 router.post('/login', async function (req, res, next){
   if (req.body === undefined) throw new BadRequestError();
@@ -29,7 +31,6 @@ router.post('/login', async function (req, res, next){
  */
 router.post('/register', async function (req, res, next) {
   if (req.body === undefined) throw new BadRequestError();
-  // const { username, password, first_name, last_name, phone } = req.body;
 
   const { username } = await User.register(req.body);
 
