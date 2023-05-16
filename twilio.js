@@ -1,19 +1,20 @@
-'use strict';
+"use strict";
 
-const { ACCT_SID, AUTH_TOKEN, PHONE } = require('./config');
+const {
+  TWILIO_ACCOUNT_SID,
+  TWILIO_ACCOUNT_AUTH_TOKEN,
+  TWILIO_PHONE_NUMBER,
+} = require("./config");
 
-const client = require('twilio')(ACCT_SID, AUTH_TOKEN);
+const client = require("twilio")(TWILIO_ACCOUNT_SID, TWILIO_ACCOUNT_AUTH_TOKEN);
 
-  async function sendMsg ({msgBody, recipient}) {
-    console.log("recipient", recipient);
-    client.messages
-    .create({
-       body: msgBody,
-       from: PHONE,
-       to: recipient
-     })
-    .then(message => console.log(message.sid))
-  }
+async function sendTextFromTwilio({ body, to }) {
+  const message = await client.messages.create({
+    body,
+    from: TWILIO_PHONE_NUMBER,
+    to,
+  });
+  console.log(message.sid);
+}
 
-
-module.exports = sendMsg;
+module.exports = sendTextFromTwilio;
