@@ -27,7 +27,8 @@ CREATE TABLE password_reset_codes (
   id SERIAL PRIMARY KEY,
   for_username TEXT NOT NULL REFERENCES users,
   reset_code INT NOT NULL,
-  code_created_time TIMESTAMP WITH TIME ZONE NOT NULL);
+  code_created_time TIMESTAMP WITH TIME ZONE NOT NULL,
+  already_used BOOLEAN NOT NULL DEFAULT false);
 
 \echo 'Delete and recreate messagely_test db?'
 \prompt 'Return for yes or control-C to cancel > ' foo
@@ -57,7 +58,8 @@ CREATE TABLE password_reset_codes (
   id SERIAL PRIMARY KEY,
   for_username TEXT NOT NULL REFERENCES users,
   reset_code INT NOT NULL,
-  code_created_time TIMESTAMP WITH TIME ZONE NOT NULL);
+  code_created_time TIMESTAMP WITH TIME ZONE NOT NULL,
+  already_used BOOLEAN NOT NULL DEFAULT false);
 
 INSERT INTO users(username, password, first_name, last_name, phone, join_at)
 VALUES

@@ -208,19 +208,33 @@ class User {
    * Attempts to reset a user's password with the given reset code.
    * @returns {boolean}: true iff the password was changed successfully
    */
-  static async resetPasswordWithCode({ username, newPassword, resetCode }) {
+  static async resetPasswordWithCode({ username, newPassword, userResetCode }) {
     const codeResult = await db.query(
-      `SELECT reset_code FROM password_reset_codes
+      `SELECT reset_code, code_created_time, already_used FROM password_reset_codes
        WHERE for_username = $1
        ORDER BY code_created_time DESC
        `, [username]);
 
-    const generatedCode = codeResult.rows[0].reset_code;
+    const { reset_code,
+      code_created_time,
+      already_used } = codeResult.rows[0];
+
+    console.log("code created type: ", code_created_time instanceof Date);
+    console.log("code created time: ", code_created_time);
+
+    //FIXME: extract magic number
+    if (Date.now() - code_created_time.getTime() > 10 * 60 * 1000) {
+      console.log("CODE EXPIRED")
+      return false; //code expired
+    }
 
     //TODO: check reset code timestamp still valid?
+    if (already_used) {
+      return false; //TODO: send a message to the h@x0r
+    }
 
     //TODO: throw an error?
-    if (Number(resetCode) !== generatedCode) {
+    if (Number(userResetCode) !== reset_code) {
       return false;
     }
 
@@ -232,7 +246,8 @@ class User {
       WHERE username = $2
       RETURNING username`, [hashedPassword, username]);
 
-    return result.rows.length === 1;
+    //FIXME: delete code
+    return (result.rows.length === 1);
   }
 }
 

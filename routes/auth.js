@@ -72,7 +72,7 @@ router.post('/reset-password', ensureLoggedIn, async function (req, res, next) {
   const isResetSuccessful = await User.resetPasswordWithCode({
     username: user.username,
     newPassword: req.body.new_password,
-    resetCode: req.body.reset_code
+    userResetCode: req.body.reset_code
   });
 
   const message = isResetSuccessful ? "password changed successfully!" :
