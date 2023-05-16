@@ -184,6 +184,56 @@ class User {
     return messages;
 
   }
+
+  /**
+   * Creates a 6 digit password reset code for a given user.
+   * @param {string} username the username for whom we are creating the code
+   * @returns {number} the reset code
+   */
+  static async createChangePasswordCode(username) {
+    const code = Math.floor(100000 + Math.random() * 900000); // 6 digits
+
+    const result = await db.query(`INSERT INTO password_reset_codes
+     (for_username,
+      reset_code,
+      code_created_time)
+    VALUES
+      ($1, $2, current_timestamp)
+    RETURNING reset_code`, [username, code]);
+
+    return result.rows[0].reset_code;
+  }
+
+  /**
+   * Attempts to reset a user's password with the given reset code.
+   * @returns {boolean}: true iff the password was changed successfully
+   */
+  static async resetPasswordWithCode({ username, newPassword, resetCode }) {
+    const codeResult = await db.query(
+      `SELECT reset_code FROM password_reset_codes
+       WHERE for_username = $1
+       ORDER BY code_created_time DESC
+       `, [username]);
+
+    const generatedCode = codeResult.rows[0].reset_code;
+
+    //TODO: check reset code timestamp still valid?
+
+    //TODO: throw an error?
+    if (Number(resetCode) !== generatedCode) {
+      return false;
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_WORK_FACTOR);
+
+    const result = await db.query(
+      `UPDATE users
+      SET password = $1
+      WHERE username = $2
+      RETURNING username`, [hashedPassword, username]);
+
+    return result.rows.length === 1;
+  }
 }
 
 module.exports = User;
