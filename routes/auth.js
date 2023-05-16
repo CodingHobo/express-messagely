@@ -13,6 +13,7 @@ const User = require("../models/user");
 /** POST /login: {username, password} => {token} */
 router.post('/login', async function (req, res, next){
   if (req.body === undefined) throw new BadRequestError();
+  
   const { username, password } = req.body;
   const loggedIn = await User.authenticate(username, password);
 

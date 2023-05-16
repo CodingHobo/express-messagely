@@ -56,6 +56,7 @@ class User {
       [username]
     );
 
+    // TODO: is this a potential
     if (result.rows.length === 0) {
       throw new NotFoundError(`user ${username} not found`);
     }
@@ -96,7 +97,7 @@ class User {
       [username]
     );
 
-    let user = result.rows[0];
+    const user = result.rows[0];
 
     if (!user) throw new NotFoundError(`no such User Exists: ${username}`);
 

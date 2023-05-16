@@ -3,6 +3,7 @@
 const { UnauthorizedError } = require("../expressError");
 const { ensureLoggedIn } = require("../middleware/auth");
 const Message = require("../models/message");
+const sendMsg = require('../twilio')
 
 const Router = require("express").Router;
 const router = new Router();
@@ -42,7 +43,10 @@ router.post('/', ensureLoggedIn, async function (req, res, next) {
     req.body.from_username = res.locals.user.username; //FIXME: refactor this
 
     const message = await Message.create(req.body);
+    const recipName = message.to_username;
+    const phoneNum = await User.get(recipName).phone
 
+    sendMsg({msgBody: `You've got a new message`, recipient: phoneNum} )
     return res.json({ message });
 });
 
@@ -60,7 +64,7 @@ router.post('/:id/read', ensureLoggedIn, async function (req, res, next) {
     const message = await Message.get(req.params.id);
 
     if (currentUsername !== message.to_user.username) {
-        throw new UnauthorizedError();
+        throw new UnauthorizedError("Cannot set message to read");
     }
 
     const readMessage = await Message.markRead(req.params.id);
