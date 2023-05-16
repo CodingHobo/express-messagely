@@ -3,7 +3,8 @@
 const { UnauthorizedError } = require("../expressError");
 const { ensureLoggedIn } = require("../middleware/auth");
 const Message = require("../models/message");
-const sendMsg = require('../twilio')
+const User = require("../models/user");
+const sendMsg = require('../twilio');
 
 const Router = require("express").Router;
 const router = new Router();
@@ -43,9 +44,13 @@ router.post('/', ensureLoggedIn, async function (req, res, next) {
     req.body.from_username = res.locals.user.username; //FIXME: refactor this
 
     const message = await Message.create(req.body);
-    const recipName = message.to_username;
-    const phoneNum = await User.get(recipName).phone
 
+    console.log("message:", message);
+
+    const recipName = message.to_username;
+    const phoneNum = (await User.get(recipName)).phone
+
+    console.log("phone:", phoneNum);
     sendMsg({msgBody: `You've got a new message`, recipient: phoneNum} )
     return res.json({ message });
 });

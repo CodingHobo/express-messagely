@@ -13,8 +13,8 @@ const DB_URI = (process.env.NODE_ENV === "test")
 const SECRET_KEY = process.env.SECRET_KEY || "secret";
 
 const ACCT_SID = process.env.Account_SID;
-const AUTH_TOKEN = process.env.AuthToken
-const PHONE = process.env.PhoneNum
+const AUTH_TOKEN = process.env.AuthToken;
+const PHONE = process.env.PhoneNum;
 
 const BCRYPT_WORK_FACTOR = 12;
 
